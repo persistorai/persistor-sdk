@@ -1,6 +1,6 @@
 {
   "name": "@persistorai/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript SDK for the Persistor knowledge graph API",
   "type": "module",
   "main": "dist/index.js",

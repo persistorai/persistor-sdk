@@ -102,6 +102,18 @@ export class PersistorClient {
     return JSON.parse(text) as T;
   }
 
+  /** Unwrap a response that wraps an array in { nodes: [...] }, { edges: [...] }, { results: [...] }, etc. */
+  private unwrapArray<T>(data: unknown): T[] {
+    if (Array.isArray(data)) return data as T[];
+    if (data != null && typeof data === 'object') {
+      for (const key of ['nodes', 'edges', 'results', 'entries', 'items']) {
+        const val = (data as Record<string, unknown>)[key];
+        if (Array.isArray(val)) return val as T[];
+      }
+    }
+    return [];
+  }
+
   private throwForStatus(status: number, path: string, body: string): never {
     const msg = body || `HTTP ${status}`;
     if (status === 404) throw new NotFoundError(msg, path);
@@ -125,7 +137,8 @@ export class PersistorClient {
   // ── Nodes ──
 
   async listNodes(params?: ListParams): Promise<PersistorNode[]> {
-    return this.request('GET', `/nodes${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/nodes${qs({ ...params })}`);
+    return this.unwrapArray<PersistorNode>(data);
   }
 
   async createNode(input: CreateNodeInput): Promise<PersistorNode> {
@@ -152,13 +165,15 @@ export class PersistorClient {
   }
 
   async getNodeHistory(id: string): Promise<NodeHistoryEntry[]> {
-    return this.request('GET', `/nodes/${encodeURIComponent(id)}/history`);
+    const data = await this.request<unknown>('GET', `/nodes/${encodeURIComponent(id)}/history`);
+    return this.unwrapArray<NodeHistoryEntry>(data);
   }
 
   // ── Edges ──
 
   async listEdges(params?: ListParams): Promise<PersistorEdge[]> {
-    return this.request('GET', `/edges${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/edges${qs({ ...params })}`);
+    return this.unwrapArray<PersistorEdge>(data);
   }
 
   async createEdge(input: CreateEdgeInput): Promise<PersistorEdge> {
@@ -199,25 +214,30 @@ export class PersistorClient {
   // ── Search ──
 
   async search(params: SearchParams): Promise<PersistorSearchResult[]> {
-    return this.request('GET', `/search${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/search${qs({ ...params })}`);
+    return this.unwrapArray<PersistorSearchResult>(data);
   }
 
   async searchSemantic(params: SearchParams): Promise<PersistorSearchResult[]> {
-    return this.request('GET', `/search/semantic${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/search/semantic${qs({ ...params })}`);
+    return this.unwrapArray<PersistorSearchResult>(data);
   }
 
   async searchHybrid(params: SearchParams): Promise<PersistorSearchResult[]> {
-    return this.request('GET', `/search/hybrid${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/search/hybrid${qs({ ...params })}`);
+    return this.unwrapArray<PersistorSearchResult>(data);
   }
 
   // ── Graph traversal ──
 
   async getNeighbors(id: string): Promise<PersistorNode[]> {
-    return this.request('GET', `/graph/neighbors/${encodeURIComponent(id)}`);
+    const data = await this.request<unknown>('GET', `/graph/neighbors/${encodeURIComponent(id)}`);
+    return this.unwrapArray<PersistorNode>(data);
   }
 
   async traverse(id: string, params?: TraverseParams): Promise<PersistorNode[]> {
-    return this.request('GET', `/graph/traverse/${encodeURIComponent(id)}${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/graph/traverse/${encodeURIComponent(id)}${qs({ ...params })}`);
+    return this.unwrapArray<PersistorNode>(data);
   }
 
   async getContext(id: string): Promise<PersistorContext> {
@@ -268,7 +288,8 @@ export class PersistorClient {
   // ── Audit ──
 
   async queryAudit(params?: AuditParams): Promise<AuditEntry[]> {
-    return this.request('GET', `/audit${qs({ ...params })}`);
+    const data = await this.request<unknown>('GET', `/audit${qs({ ...params })}`);
+    return this.unwrapArray<AuditEntry>(data);
   }
 
   async purgeAudit(): Promise<void> {
